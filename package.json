@@ -1,0 +1,7 @@
+{
+  "name": "yuru-cli",
+  "version": "0.0.1",
+  "bin": {
+    "yuru-cli": "./yuru-cli.js"
+  }
+}
