@@ -14,15 +14,9 @@ let command;
 let helpCommand = 
 `\x1b[45myuru-cli\x1b[0m | version 0.0.1
 
-setadd [set url] [description] - adds the provided set to the yuru.ca database
-    -d --description | specifies the description for the set
-    -c --completed-date | specifies the completion date of the set
-    -p --person | person the set is attributed to (sydney, lilac, may, or hazel)
-    -m --mapper | username of the person the set is attributed to (sydnmc, yuiyamu, mayniaria, or kyatarii)
+setadd [set id] - adds the provided set to the yuru.ca database
 
-diffadd [diff url] - adds the provided diff to the yuru.ca database, depending on the person given
-    -c --completed-date | specifies the completion date of the gd
-    -a --amount-mapped | sets the amount that you mapped of a given gd
+diffadd [person] [diff id] - adds the provided diff to the yuru.ca database, depending on the person given
 
 setedit - lists all available sets and gives you an option to select one to edit
 
