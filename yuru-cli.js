@@ -7,12 +7,12 @@ const { stdin: input, stdout: output, send } = require('node:process');
 const rl = readline.createInterface({ input, output });
 
 const args = process.argv.slice(2); //passes through the arguments the user makes :3
-const endpoint = 'http://api.yuru.ca'
+const endpoint = 'http://localhost:3333';
 
 let command;
 
 let helpCommand = 
-`\x1b[45myuru-cli\x1b[0m | version 0.0.1
+`\x1b[45myuru-cli\x1b[0m | version 0.0.2
 
 setadd [set id] - adds the provided set to the yuru.ca database
 
@@ -29,15 +29,17 @@ command = args[0];
 if (command === 'setadd') {
     setadd(args[1]);
 } else if (command === 'diffadd') {
-    diffadd(args[1]);
+    diffadd(args[2], args[1]);
 } else if (command === 'setedit') {
     setedit();
 } else if (command === 'diffedit') {
-    diffedit(args[2], args[1]);
+    diffedit(args[1]);
 } else if (command === 'help') {
     console.log(helpCommand);
+    rl.close(); //we need rl to stop waiting on something, even outside of rl commands
 } else {
     console.log('unknown command >_<;; type help to see all commands');
+    rl.close();
 }
 
 function sendNewValue(property, dataType, newData, person) {
@@ -60,7 +62,7 @@ function sendNewValue(property, dataType, newData, person) {
                 },
                 body: JSON.stringify(newData),
             });
-            console.log(confirm);
+            console.log(await confirm.text());
             rl.close();
         } else {
             rl.close();
@@ -74,14 +76,14 @@ async function setadd(beatmapsetId) {
 
     console.log(`found set ${setInfo.artist} - ${setInfo.title}!`);
     rl.question(`\nplease type in the map description~ (note: this currently doesn't support profile hovers, so just keep that in mind~)\n`, (description) => {
-        setInfo.description = description;
+        setInfo.description = [{type: 'description', content: description}];
         rl.question('what is the username of the map creator?\n', (creatorUsername) => {
             setInfo.creator = creatorUsername;
             rl.question(`what is the creator's name? (eg. lilac as opposed to yuiyamu)?\n`, (creatorName) => {
                 setInfo.personCreator = creatorName;
                 rl.question(`finally, what is the date of completion for this set?\n`, (dateFinished) => {
                     setInfo.dateFinished = dateFinished;
-                    sendNewValue(null, setInfo, "setadd", null);
+                    sendNewValue(null, "setadd", setInfo, null);
                 });
             });
         })
@@ -106,7 +108,7 @@ async function diffadd(beatmapId, person) {
             diffInfo.maps[0].amountMapped = amountMapped;
             rl.question(`what is the date of completion for ths diff?\n`, (dateFinished) => {
                 diffInfo.maps[0].dateFinished = dateFinished;
-                sendNewChunk(null, diffInfo, 'diffadd', person);
+                sendNewValue(null, 'diffadd', diffInfo, person);
             });
         });
     });
@@ -143,13 +145,13 @@ async function setedit() {
                     if (optNum === 6) {
                         console.log('editing the first property of set descriptions (any sets without osu hovers) is only supported currently.');
                         rl.question(`change description from "${currentProperty[0].content}" to...?\n`, (newProperty) => {
-                            sets[setsNum][setProperties[optNum]][0].content = newProperty;
-                            sendNewValue(newProperty, "setedit", sets, null);
+                            sets[setNum][setProperties[optNum]][0].content = newProperty;
+                            sendNewValue(newProperty, "setedit", sets[setNum], null);
                         });
                     } else {
                         rl.question(`\nchange ${setProperties[optNum]} from ${currentProperty} to...? `, (newProperty) => {
-                            sets[setsNum][setProperties[optNum]] = newProperty;
-                            sendNewValue(newProperty, "setedit", sets, null);
+                            sets[setNum][setProperties[optNum]] = newProperty;
+                            sendNewValue(newProperty, "setedit", sets[setNum], null);
                         });
                     }
                 } catch {
@@ -221,7 +223,7 @@ async function diffedit(person) {
                         } else {
                             diffs[curInfo.set][property] = newProperty;
                         }
-                        sendNewValue(newProperty, "setedit", diffs, person);
+                        sendNewValue(newProperty, "diffedit", diffs[curInfo.set], person);
                     });
                 } catch {
                     console.log(`${option} was not recognized >_<;;`);
